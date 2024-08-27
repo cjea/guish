@@ -1,0 +1,74 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>guish</title>
+</head>
+
+<body>
+    <h1>guish</h1>
+    <div id="main">
+        <div id="cmdZone">
+            <form id="cmdForm" method="post" action="http://localhost:3000/" accept="application/json">
+                <div>
+                    <label for="cmd">cmd</label>
+                    <input id="cmd" autofocus name="cmd" value="" />
+                </div>
+            </form>
+        </div>
+        <div>
+            <h3>Output</h3>
+            <div id="output">
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        getForm().addEventListener("submit", function (evt) {
+            evt.preventDefault();
+            runCmd()
+                .then(res => res.json())
+                .then((res) => setOutput(res.output))
+                .catch(err => alert("ERROR: " + err))
+        })
+
+        const runOptionsBuffer = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: { cmd: "" }
+        }
+
+        function serverUrl() {
+            return "http://localhost:3000";
+        }
+
+        function getForm() {
+            return document.getElementById("cmdForm");
+        }
+
+        function readCommand() {
+            return document.getElementById("cmd").value;
+        }
+
+        function getOutput() {
+            return document.getElementById("output");
+        }
+
+        function setOutput(innerText) {
+            getOutput().innerText = innerText;
+        }
+
+        function refreshRunOptions() {
+            runOptionsBuffer.body = JSON.stringify({ cmd: readCommand() });
+            return runOptionsBuffer;
+        }
+
+        function runCmd() {
+            return fetch(serverUrl(), refreshRunOptions());
+        }
+    </script>
+</body>
+
+</html>
