@@ -11,6 +11,10 @@ app.get("/", async (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+app.get("/src/index.js", async (req, res) => {
+  res.sendFile(path.join(__dirname, "src/index.js"));
+});
+
 app.post("/", async (req, res) => {
   function fail(status, body) {
     console.error({ level: "error", body });

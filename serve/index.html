@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>guish</title>
+    <style>
+        body {
+            width: 60%;
+            padding: 1.2em;
+            font-size: 1.4em;
+            line-height: 1.3em;
+        }
+
+        #cmd {
+            width: 400px;
+        }
+
+        #flag1 {
+            width: 400px;
+        }
+
+        #flag_flag1 {
+            width: 100px;
+        }
+    </style>
 </head>
 
 <body>
@@ -12,63 +32,26 @@
         <div id="cmdZone">
             <form id="cmdForm" method="post" action="http://localhost:3000/" accept="application/json">
                 <div>
-                    <label for="cmd">cmd</label>
+                    <label for="cmd">cmd: </label>
                     <input id="cmd" autofocus name="cmd" value="" />
+                    <div id="cmdLineArgs">
+                        <div class="cmdLineArgs_flag1">
+                            <input type="text" id="flag_flag1" value="--data" />
+                            <input id="flag1" name="flag1" value="" />
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
         <div>
             <h3>Output</h3>
-            <div id="output">
+            <pre id="output">
 
-            </div>
+            </pre>
         </div>
     </div>
 
-    <script>
-        getForm().addEventListener("submit", function (evt) {
-            evt.preventDefault();
-            runCmd()
-                .then(res => res.json())
-                .then((res) => setOutput(res.output))
-                .catch(err => alert("ERROR: " + err))
-        })
-
-        const runOptionsBuffer = {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: { cmd: "" }
-        }
-
-        function serverUrl() {
-            return "http://localhost:3000";
-        }
-
-        function getForm() {
-            return document.getElementById("cmdForm");
-        }
-
-        function readCommand() {
-            return document.getElementById("cmd").value;
-        }
-
-        function getOutput() {
-            return document.getElementById("output");
-        }
-
-        function setOutput(innerText) {
-            getOutput().innerText = innerText;
-        }
-
-        function refreshRunOptions() {
-            runOptionsBuffer.body = JSON.stringify({ cmd: readCommand() });
-            return runOptionsBuffer;
-        }
-
-        function runCmd() {
-            return fetch(serverUrl(), refreshRunOptions());
-        }
-    </script>
+    <script src="./src/index.js"></script>
 </body>
 
 </html>
