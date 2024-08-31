@@ -128,7 +128,7 @@ function setFlag_Flag1(str) {
 
 function allFlags() {
   return {
-    [readFlag_Flag1()]: readFlag1(),
+    [readFlag_Flag1().trim()]: readFlag1().trim(),
   };
 }
 
@@ -141,13 +141,13 @@ function setOutput(innerText) {
 }
 
 function formatCommandAndFlags() {
-  let ret = readCommand();
-  const flag1 = readFlag1().trim();
-  if (flag1) {
-    ret += ` ${readFlag_Flag1()} ${flag1}`;
+  let ret = [readCommand()];
+  for (const [key, val] of Object.entries(allFlags())) {
+    ret.push(key);
+    ret.push(val);
   }
 
-  return ret;
+  return ret.join(" ");
 }
 
 function setRunRequestBuffer() {
