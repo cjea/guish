@@ -1,12 +1,18 @@
 init();
 
 function init() {
+  setTitle("the title");
+  setDescription("the description");
   setCommand(
     `curl http://httpbin.org/post -H content-type:\\ application/json`
   );
   setFlag_Flag1(`--data`);
   setFlag1(`'{"Hello": "world"}'`);
 
+  /**
+   * TODO: clicking the button once triggers two POSTs.
+   */
+  getSave().addEventListener("click", handleSave, false);
   getForm().addEventListener("submit", handleSubmitForm);
   getForm().addEventListener("keydown", dispatchSubmitOnEnter);
 }
@@ -26,15 +32,15 @@ function dispatchSubmitOnEnter(evt) {
   }
 }
 
-const runRequestBuffer = {
+const httpPostBuffer = {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: { cmd: "" },
 };
 
-function setRunRequestBody(body) {
-  runRequestBuffer.body = body;
-  return runRequestBuffer;
+function setPostBody(body) {
+  httpPostBuffer.body = body;
+  return httpPostBuffer;
 }
 
 function isEnter(code) {
@@ -43,6 +49,10 @@ function isEnter(code) {
 
 function serverUrl() {
   return "http://localhost:3000";
+}
+
+function getSave() {
+  return document.getElementById("save");
 }
 
 function getForm() {
@@ -54,6 +64,30 @@ function dispatchSubmitForm() {
   const submitEvent = new Event("submit", submitOptions);
 
   getForm().dispatchEvent(submitEvent);
+}
+
+function getTitle() {
+  return document.getElementById("title");
+}
+
+function readTitle() {
+  return getTitle().value;
+}
+
+function setTitle(str) {
+  getTitle().value = str;
+}
+
+function getDescription() {
+  return document.getElementById("description");
+}
+
+function readDescription() {
+  return getDescription().value;
+}
+
+function setDescription(str) {
+  getDescription().value = str;
 }
 
 function getCommand() {
@@ -92,6 +126,12 @@ function setFlag_Flag1(str) {
   getFlag_Flag1().value = str;
 }
 
+function allFlags() {
+  return {
+    [readFlag_Flag1()]: readFlag1(),
+  };
+}
+
 function getOutput() {
   return document.getElementById("output");
 }
@@ -100,14 +140,48 @@ function setOutput(innerText) {
   getOutput().innerText = innerText;
 }
 
-function setRunRequestBuffer() {
-  let cmd = readCommand();
+function formatCommandAndFlags() {
+  let ret = readCommand();
   const flag1 = readFlag1().trim();
   if (flag1) {
-    cmd += ` ${readFlag_Flag1()} ${flag1}`;
+    ret += ` ${readFlag_Flag1()} ${flag1}`;
   }
 
-  return setRunRequestBody(JSON.stringify({ cmd }));
+  return ret;
+}
+
+function setRunRequestBuffer() {
+  return setPostBody(
+    JSON.stringify({
+      title: readTitle(),
+      description: readDescription(),
+      cmd: formatCommandAndFlags(),
+    })
+  );
+}
+
+function setSaveBuffer() {
+  return setPostBody(
+    JSON.stringify({
+      title: readTitle(),
+      description: readDescription(),
+      cmd: readCommand(),
+      flags: allFlags(),
+    })
+  );
+}
+
+function handleSave(evt) {
+  evt.preventDefault();
+  return save();
+}
+
+function save() {
+  return fetch(serverUrl() + "/save", setSaveBuffer());
+}
+
+function loadAll() {
+  return fetch(serverUrl() + "/load");
 }
 
 function issueRunRequestHttp() {

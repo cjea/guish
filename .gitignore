@@ -8,3 +8,4 @@ node_modules
 /.purs*
 /.psa*
 /.spago
+/serve/store/**

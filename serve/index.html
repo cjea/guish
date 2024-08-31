@@ -23,12 +23,44 @@
         #flag_flag1 {
             width: 100px;
         }
+
+        #titleContainer {
+            display: flex;
+            align-content: center;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        #descriptionContainer {
+            display: flex;
+            align-content: center;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        #title {
+            height: 40px;
+            font-size: 1.3em;
+        }
+
+        #description {
+            height: 30px;
+            font-size: 1.1em;
+        }
     </style>
 </head>
 
 <body>
     <h1>guish</h1>
     <div id="main">
+        <div id="titleContainer">
+            <h2>Title: </h2>
+            <input id="title" />
+        </div>
+        <div id="descriptionContainer">
+            <h3>Desc: </h3>
+            <textarea id="description"></textarea>
+        </div>
         <div id="cmdZone">
             <form id="cmdForm" method="post" action="http://localhost:3000/" accept="application/json">
                 <div>
@@ -42,6 +74,9 @@
                     </div>
                 </div>
             </form>
+        </div>
+        <div>
+            <button id="save" onclick="save()">Save</button>
         </div>
         <div>
             <h3>Output</h3>
