@@ -1,20 +1,39 @@
+let STORE = {};
 init();
 
 function init() {
-  setTitle("the title");
-  setDescription("the description");
-  setCommand(
-    `curl http://httpbin.org/post -H content-type:\\ application/json`
-  );
-  setFlag_Flag1(`--data`);
-  setFlag1(`'{"Hello": "world"}'`);
+  loadAllJson().then((res) => {
+    STORE = res.sort((a, b) => a.title.localeCompare(b.title));
+    /**
+     * TODO: clicking the button once triggers two POSTs.
+     */
+    getSave().addEventListener("click", handleSave, false);
+    getForm().addEventListener("submit", handleSubmitForm);
+    getForm().addEventListener("keydown", dispatchSubmitOnEnter);
+    getAddFlag().addEventListener("click", renderNewEmptyFlag);
 
-  /**
-   * TODO: clicking the button once triggers two POSTs.
-   */
-  getSave().addEventListener("click", handleSave, false);
-  getForm().addEventListener("submit", handleSubmitForm);
-  getForm().addEventListener("keydown", dispatchSubmitOnEnter);
+    setBrowse(
+      "<div>" +
+        STORE.map(({ title }) => {
+          return `<li><a onclick="browseTitle(\`${title}\`)">${title}</a></li>`;
+        }).join("\n") +
+        "</div>"
+    );
+  });
+}
+
+function browseTitle(title) {
+  const el = STORE.find((s) => s.title === title);
+  if (!el) {
+    alert("bad browse: " + title);
+    return;
+  }
+
+  const { description, cmd, flags } = el;
+  setTitle(title);
+  setDescription(description);
+  setCommand(cmd);
+  renderFlags(flags);
 }
 
 function handleSubmitForm(evt) {
@@ -30,6 +49,19 @@ function dispatchSubmitOnEnter(evt) {
     evt.preventDefault();
     dispatchSubmitForm();
   }
+}
+
+function renderNewEmptyFlag(evt) {
+  evt.preventDefault();
+  const flag = { name: "TODO", val: "TODO" };
+  renderFlags(addFlag(flag));
+}
+
+function addFlag(flag) {
+  const flags = readFlags();
+  flags.push(flag);
+
+  return flags;
 }
 
 const httpPostBuffer = {
@@ -49,6 +81,14 @@ function isEnter(code) {
 
 function serverUrl() {
   return "http://localhost:3000";
+}
+
+function getBrowse() {
+  return document.getElementById("toc");
+}
+
+function setBrowse(html) {
+  document.getElementById("toc").innerHTML = html;
 }
 
 function getSave() {
@@ -102,34 +142,45 @@ function setCommand(str) {
   getCommand().value = str;
 }
 
-function getFlag1() {
-  return document.getElementById("flag1");
+function getAddFlag() {
+  return document.getElementById("addFlag");
 }
 
-function readFlag1() {
-  return getFlag1().value;
+function readFlags() {
+  const names = document.querySelectorAll("#cmdLineArgs .name");
+  const values = document.querySelectorAll("#cmdLineArgs .val");
+  const ret = [];
+  for (let i = 0; i < names.length; ++i) {
+    ret.push({
+      name: names[i].value,
+      val: values[i].value,
+    });
+  }
+
+  return ret;
 }
 
-function setFlag1(str) {
-  getFlag1().value = str;
+function dequote(str) {
+  return str.replaceAll('"', "&quot;");
 }
 
-function getFlag_Flag1() {
-  return document.getElementById("flag_flag1");
+function encodeFlagHtml({ name, val }) {
+  return `
+<div class="cmdLineArgsRow">
+  <input type="text" class="name" value="${dequote(name)}" />
+  <input type="text" class="val" value="${dequote(val)}" />
+  <button onclick="removeRow(event)">X</button>
+</div>
+  `;
 }
 
-function readFlag_Flag1() {
-  return getFlag_Flag1().value;
+function removeRow(evt) {
+  evt.target.closest(".cmdLineArgsRow").remove();
 }
 
-function setFlag_Flag1(str) {
-  getFlag_Flag1().value = str;
-}
-
-function allFlags() {
-  return {
-    [readFlag_Flag1().trim()]: readFlag1().trim(),
-  };
+function renderFlags(flags) {
+  const node = document.getElementById("cmdLineArgs");
+  node.innerHTML = flags.map(encodeFlagHtml).join("\n");
 }
 
 function getOutput() {
@@ -142,8 +193,8 @@ function setOutput(innerText) {
 
 function formatCommandAndFlags() {
   let ret = [readCommand()];
-  for (const [key, val] of Object.entries(allFlags())) {
-    ret.push(key);
+  for (const { name, val } of readFlags()) {
+    ret.push(name);
     ret.push(val);
   }
 
@@ -166,7 +217,7 @@ function setSaveBuffer() {
       title: readTitle(),
       description: readDescription(),
       cmd: readCommand(),
-      flags: allFlags(),
+      flags: readFlags(),
     })
   );
 }
@@ -180,8 +231,8 @@ function save() {
   return fetch(serverUrl() + "/save", setSaveBuffer());
 }
 
-function loadAll() {
-  return fetch(serverUrl() + "/load");
+function loadAllJson() {
+  return fetch(serverUrl() + "/load").then((res) => res.json());
 }
 
 function issueRunRequestHttp() {

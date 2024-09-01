@@ -53,6 +53,7 @@
 <body>
     <h1>guish</h1>
     <div id="main">
+        <div id="toc"></div>
         <div id="titleContainer">
             <h2>Title: </h2>
             <input id="title" />
@@ -66,12 +67,10 @@
                 <div>
                     <label for="cmd">cmd: </label>
                     <input id="cmd" autofocus name="cmd" value="" />
-                    <div id="cmdLineArgs">
-                        <div class="cmdLineArgs_flag1">
-                            <input type="text" id="flag_flag1" value="--data" />
-                            <input id="flag1" name="flag1" value="" />
-                        </div>
-                    </div>
+                    <div id="cmdLineArgs"></div>
+                </div>
+                <div>
+                    <button id="addFlag">+</button>
                 </div>
             </form>
         </div>
