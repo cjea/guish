@@ -17,6 +17,11 @@ app.get("/src/index.js", async (req, res) => {
 });
 
 const STORE_PATH = path.join(__dirname, "store");
+if (!fs.existsSync(STORE_PATH)) {
+  console.log("Initializing store directory since none exists.");
+  fs.mkdirSync(STORE_PATH);
+  console.log("Initialized store directory at " + STORE_PATH);
+}
 
 app.get("/load", async (req, res) => {
   return res
@@ -81,5 +86,5 @@ function fail(res, status, body) {
 }
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`Listening on http://localhost:${port}`);
 });

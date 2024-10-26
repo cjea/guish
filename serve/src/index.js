@@ -94,8 +94,7 @@ function setPostBody(body) {
 }
 
 function setPostBodyJson(body) {
-  httpPostBuffer.body = JSON.stringify(body);
-  return httpPostBuffer;
+  return setPostBody(JSON.stringify(body));
 }
 
 function isEnter(code) {
