@@ -55,9 +55,7 @@ function handleSubmitOnEnter(evt) {
 }
 
 function handleSaveOnEnter(evt) {
-  if (isEnter(evt.code)) {
-    return issueSaveCommandHttp().then(() => refreshBrowse());
-  }
+  if (isEnter(evt.code)) return handleSave(evt);
 }
 
 function renderNewEmptyFlag(evt) {
