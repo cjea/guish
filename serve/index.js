@@ -33,7 +33,7 @@ app.post("/save", async (req, res) => {
   if (!fs.existsSync(STORE_PATH)) fs.mkdirSync(STORE_PATH);
 
   fs.writeFileSync(
-    path.join(STORE_PATH, title + ".json"),
+    titlePath(title),
     JSON.stringify({
       title,
       description,
@@ -49,6 +49,15 @@ app.post("/save", async (req, res) => {
   });
 });
 
+app.post("/trash", async (req, res) => {
+  const { title } = req.body;
+  const fd = titlePath(title);
+  if (!fs.existsSync(fd)) return fail(res, 404, `Nothing to delete.`);
+
+  fs.rmSync(fd);
+  res.status(201).send({ level: "success", title });
+});
+
 app.post("/", async (req, res) => {
   const { title, description, cmd } = req.body;
   try {
@@ -61,6 +70,10 @@ app.post("/", async (req, res) => {
     return fail(res, 400, `Failed to execute: ${err.message}`);
   }
 });
+
+function titlePath(title) {
+  return path.join(STORE_PATH, title + ".json");
+}
 
 function fail(res, status, body) {
   console.error({ level: "error", body });

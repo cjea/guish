@@ -2,24 +2,27 @@ let STORE = {};
 init();
 
 function init() {
-  loadAllJson().then((res) => {
-    STORE = res.sort((a, b) => a.title.localeCompare(b.title));
-    /**
-     * TODO: clicking the button once triggers two POSTs.
-     */
-    getSave().addEventListener("click", handleSave, false);
-    getForm().addEventListener("submit", handleSubmitForm);
-    getForm().addEventListener("keydown", dispatchSubmitOnEnter);
-    getAddFlag().addEventListener("click", renderNewEmptyFlag);
+  refreshBrowse();
+  /**
+   * TODO: clicking the button once triggers `handleSave` twice.
+   */
+  getSave().addEventListener("click", handleSave, false);
+  getTitle().addEventListener("keydown", handleSaveOnEnter, false);
+  getForm().addEventListener("submit", handleSubmitRunRequest);
+  getForm().addEventListener("keydown", handleSubmitOnEnter);
+  getAddFlag().addEventListener("click", renderNewEmptyFlag);
+  getTrash().addEventListener("click", handleTrashCommand);
+}
 
-    setBrowse(
-      "<div>" +
-        STORE.map(({ title }) => {
-          return `<li><a onclick="browseTitle(\`${title}\`)">${title}</a></li>`;
-        }).join("\n") +
-        "</div>"
-    );
-  });
+async function refreshBrowse() {
+  function toLi({ title }) {
+    return `<li><a onclick="browseTitle(\`${title}\`)">${title}</a></li>`;
+  }
+  const res = await loadAllJson();
+  STORE = res.sort(sortByTitle);
+  setBrowse("<div>" + STORE.map(toLi).join("\n") + "</div>");
+
+  return res;
 }
 
 function browseTitle(title) {
@@ -36,7 +39,7 @@ function browseTitle(title) {
   renderFlags(flags);
 }
 
-function handleSubmitForm(evt) {
+function handleSubmitRunRequest(evt) {
   evt.preventDefault();
   issueRunRequestHttp()
     .then((res) => res.json())
@@ -44,10 +47,16 @@ function handleSubmitForm(evt) {
     .catch((err) => alert("ERROR: " + err));
 }
 
-function dispatchSubmitOnEnter(evt) {
+function handleSubmitOnEnter(evt) {
   if (isEnter(evt.code)) {
     evt.preventDefault();
     dispatchSubmitForm();
+  }
+}
+
+function handleSaveOnEnter(evt) {
+  if (isEnter(evt.code)) {
+    return issueSaveCommandHttp().then(() => refreshBrowse());
   }
 }
 
@@ -64,6 +73,15 @@ function addFlag(flag) {
   return flags;
 }
 
+function handleTrashCommand(evt) {
+  evt.preventDefault();
+  issueTrashCommandHttp()
+    .then((res) => res.json())
+    .then((res) => setOutput(res.output))
+    .then(() => refreshBrowse())
+    .catch((err) => alert("ERROR: " + err));
+}
+
 const httpPostBuffer = {
   method: "POST",
   headers: { "Content-Type": "application/json" },
@@ -72,6 +90,11 @@ const httpPostBuffer = {
 
 function setPostBody(body) {
   httpPostBuffer.body = body;
+  return httpPostBuffer;
+}
+
+function setPostBodyJson(body) {
+  httpPostBuffer.body = JSON.stringify(body);
   return httpPostBuffer;
 }
 
@@ -88,7 +111,7 @@ function getBrowse() {
 }
 
 function setBrowse(html) {
-  document.getElementById("toc").innerHTML = html;
+  getBrowse().innerHTML = html;
 }
 
 function getSave() {
@@ -144,6 +167,10 @@ function setCommand(str) {
 
 function getAddFlag() {
   return document.getElementById("addFlag");
+}
+
+function getTrash() {
+  return document.getElementById("trash");
 }
 
 function readFlags() {
@@ -202,39 +229,52 @@ function formatCommandAndFlags() {
 }
 
 function setRunRequestBuffer() {
-  return setPostBody(
-    JSON.stringify({
-      title: readTitle(),
-      description: readDescription(),
-      cmd: formatCommandAndFlags(),
-    })
-  );
+  return setPostBodyJson({
+    title: readTitle(),
+    description: readDescription(),
+    cmd: formatCommandAndFlags(),
+  });
 }
 
 function setSaveBuffer() {
-  return setPostBody(
-    JSON.stringify({
-      title: readTitle(),
-      description: readDescription(),
-      cmd: readCommand(),
-      flags: readFlags(),
-    })
-  );
+  return setPostBodyJson({
+    title: readTitle(),
+    description: readDescription(),
+    cmd: readCommand(),
+    flags: readFlags(),
+  });
+}
+
+function setTrashBuffer() {
+  return setPostBodyJson({ title: readTitle() });
 }
 
 function handleSave(evt) {
   evt.preventDefault();
-  return save();
+  issueSaveCommandHttp().then(() => refreshBrowse());
 }
 
-function save() {
-  return fetch(serverUrl() + "/save", setSaveBuffer());
-}
-
-function loadAllJson() {
-  return fetch(serverUrl() + "/load").then((res) => res.json());
+async function loadAllJson() {
+  try {
+    const resp = await fetch(serverUrl() + "/load");
+    return resp.json();
+  } catch (err) {
+    alert("failed to load: " + err);
+  }
 }
 
 function issueRunRequestHttp() {
-  return fetch(serverUrl(), setRunRequestBuffer());
+  return fetch(serverUrl() + "/", setRunRequestBuffer());
+}
+
+function issueSaveCommandHttp() {
+  return fetch(serverUrl() + "/save", setSaveBuffer());
+}
+
+function issueTrashCommandHttp() {
+  return fetch(serverUrl() + "/trash", setTrashBuffer());
+}
+
+function sortByTitle(a, b) {
+  return a.title.localeCompare(b.title);
 }

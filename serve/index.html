@@ -47,6 +47,21 @@
             height: 30px;
             font-size: 1.1em;
         }
+
+        #trash {
+            cursor: pointer;
+            font-weight: 1.5em;
+        }
+
+        #trash:hover {
+            color: red;
+        }
+
+        #trash:hover::after {
+            position: absolute;
+            font-style: italic;
+            content: "\00a0 (delete)";
+        }
     </style>
 </head>
 
@@ -57,6 +72,7 @@
         <div id="titleContainer">
             <h2>Title: </h2>
             <input id="title" />
+            <span id="trash">X</span>
         </div>
         <div id="descriptionContainer">
             <h3>Desc: </h3>
