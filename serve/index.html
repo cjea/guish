@@ -12,6 +12,14 @@
             line-height: 1.3em;
         }
 
+        #toc {
+            cursor: pointer;
+        }
+
+        .toc-item:hover {
+            opacity: 0.7;
+        }
+
         #cmd {
             width: 400px;
         }
@@ -28,14 +36,14 @@
             display: flex;
             align-content: center;
             align-items: center;
-            justify-content: space-evenly;
+            justify-content: flex-start;
         }
 
         #descriptionContainer {
             display: flex;
             align-content: center;
             align-items: center;
-            justify-content: space-evenly;
+            justify-content: flex-start;
         }
 
         #title {
@@ -51,6 +59,7 @@
         #trash {
             cursor: pointer;
             font-weight: 1.5em;
+            margin-left: 12px;
         }
 
         #trash:hover {
@@ -67,16 +76,17 @@
 
 <body>
     <h1>guish</h1>
+    <input id="query" placeholder="fuzzy search">
     <div id="main">
         <div id="toc"></div>
         <div id="titleContainer">
-            <h2>Title: </h2>
-            <input id="title" />
+            <h2>Title &nbsp;</h2>
+            <input id="title" placeholder="My cmd" />
             <span id="trash">X</span>
         </div>
         <div id="descriptionContainer">
-            <h3>Desc: </h3>
-            <textarea id="description"></textarea>
+            <h3>Description &nbsp;</h3>
+            <textarea id="description" placeholder="My description"></textarea>
         </div>
         <div id="cmdZone">
             <form id="cmdForm" method="post" action="http://localhost:3000/" accept="application/json">

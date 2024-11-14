@@ -1,4 +1,5 @@
 let STORE = {};
+let _GUISH_QUERY = "";
 init();
 
 function init() {
@@ -7,6 +8,7 @@ function init() {
    * TODO: clicking the button once triggers `handleSave` twice.
    */
   getSave().addEventListener("click", handleSave, false);
+  getQuery().addEventListener("keyup", handleUpdateQuery);
   getTitle().addEventListener("keydown", handleSaveOnEnter, false);
   getForm().addEventListener("submit", handleSubmitRunRequest);
   getForm().addEventListener("keydown", handleSubmitOnEnter);
@@ -15,14 +17,19 @@ function init() {
 }
 
 async function refreshBrowse() {
-  function toLi({ title }) {
-    return `<li><a onclick="browseTitle(\`${title}\`)">${title}</a></li>`;
-  }
   const res = await loadAllJson();
   STORE = res.sort(sortByTitle);
-  setBrowse("<div>" + STORE.map(toLi).join("\n") + "</div>");
+  renderBrowse();
 
   return res;
+}
+
+function renderBrowse() {
+  function toLi({ title }) {
+    return `<li class="toc-item"><a onclick="browseTitle(\`${title}\`)">${title}</a></li>`;
+  }
+  const lis = STORE.filter(fuzzyMatchesGlobalSearch).map(toLi);
+  setBrowse("<div>" + lis.join("\n") + "</div>");
 }
 
 function browseTitle(title) {
@@ -37,6 +44,8 @@ function browseTitle(title) {
   setDescription(description);
   setCommand(cmd);
   renderFlags(flags);
+  /** Hitting enter to run a command only works if a textbox is in focus. */
+  getCommand().focus();
 }
 
 function handleSubmitRunRequest(evt) {
@@ -75,8 +84,8 @@ function handleTrashCommand(evt) {
   evt.preventDefault();
   issueTrashCommandHttp()
     .then((res) => res.json())
-    .then((res) => setOutput(res.output))
-    .then(() => refreshBrowse())
+    .then((body) => setOutput(body.output))
+    .then(refreshBrowse)
     .catch((err) => alert("ERROR: " + err));
 }
 
@@ -113,6 +122,14 @@ function setBrowse(html) {
 
 function getSave() {
   return document.getElementById("save");
+}
+
+function getQuery() {
+  return document.getElementById("query");
+}
+
+function readQuery() {
+  return getQuery().value;
 }
 
 function getForm() {
@@ -175,10 +192,9 @@ function readFlags() {
   const values = document.querySelectorAll("#cmdLineArgs .val");
   const ret = [];
   for (let i = 0; i < names.length; ++i) {
-    ret.push({
-      name: names[i].value,
-      val: values[i].value,
-    });
+    const { value: name } = names[i];
+    const { value: val } = values[i];
+    ret.push({ name, val });
   }
 
   return ret;
@@ -248,7 +264,12 @@ function setTrashBuffer() {
 
 function handleSave(evt) {
   evt.preventDefault();
-  issueSaveCommandHttp().then(() => refreshBrowse());
+  issueSaveCommandHttp().then(refreshBrowse);
+}
+
+function handleUpdateQuery(evt) {
+  _GUISH_QUERY = readQuery();
+  renderBrowse();
 }
 
 async function loadAllJson() {
@@ -274,4 +295,25 @@ function issueTrashCommandHttp() {
 
 function sortByTitle(a, b) {
   return a.title.localeCompare(b.title);
+}
+
+function fuzzyMatchesGlobalSearch({ title }) {
+  let globalSearch = readQuery();
+  return fuzzyMatch(title, globalSearch);
+}
+
+function fuzzyMatch(str, query) {
+  const { length: queryLength } = query;
+  const { length: strLength } = str;
+  let pos, numMatches;
+  for (
+    pos = 0, numMatches = 0;
+    pos < strLength && numMatches < queryLength;
+    ++pos
+  ) {
+    const match = str[pos].toLowerCase() === query[numMatches].toLowerCase();
+    if (match) ++numMatches;
+  }
+
+  return numMatches === queryLength;
 }
